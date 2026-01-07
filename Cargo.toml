@@ -1,11 +1,8 @@
 [package]
-name = "in-mem-db"
+name = "kqloop"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 libc = "0.2"
 bitflags = "2"
-
-[dev-dependencies]
-nix = "0.27"  # latest version at the time of writing
