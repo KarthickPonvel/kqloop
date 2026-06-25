@@ -13,12 +13,12 @@ Designed for efficient, panic-resilient, and observable I/O event handling witho
 - **Panic-safe dispatch** — callbacks are wrapped in `catch_unwind`; a panicking callback is isolated and cannot crash the loop
 - **Per-fd error handlers** — attach an error callback per fd to handle failures gracefully
 - **Metrics** — Arc-shared `AtomicU64` counters tracking polls, dispatched events, callbacks executed, and timer fires — zero lock overhead
-- **Graceful shutdown** — stop the loop cleanly via an `Arc<AtomicBool>` shutdown handle
+- **Graceful shutdown** — stop the loop cleanly via a `ShutdownHandle`
 
 ## Usage
 
 ```rust
-use kqloop::EventLoop;
+use kqloop::{EventLoop, ShutdownHandle};
 use std::time::Duration;
 
 fn main() -> kqloop::Result<()> {
@@ -42,9 +42,18 @@ fn main() -> kqloop::Result<()> {
         Ok(())
     })?;
 
+    // Shutdown after 10s
+    let handle = el.shutdown_handle();
+    el.add_timer(Duration::from_secs(10), move || {
+        handle.shutdown();
+        Ok(())
+    });
+
     el.run()
 }
 ```
+
+See [`examples/`](examples/) for more usage patterns.
 
 ## Platform
 
