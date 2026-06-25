@@ -140,6 +140,18 @@ pub struct MetricsSnapshot {
     pub timers_fired: u64,
 }
 
+pub struct ShutdownHandle(Arc<AtomicBool>);
+
+impl ShutdownHandle {
+    pub fn shutdown(&self) {
+        self.0.store(false, Ordering::Release);
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.0.load(Ordering::Acquire)
+    }
+}
+
 pub struct EventLoop {
     kqueue: Kqueue,
     handlers: HashMap<RawFd, FdEvent>,
@@ -354,6 +366,10 @@ impl EventLoop {
             .iter()
             .map(|t| t.deadline.saturating_duration_since(now))
             .min()
+    }
+
+    pub fn shutdown_handle(&self) -> ShutdownHandle {
+        ShutdownHandle(self.running.clone())
     }
 
     fn poll(&mut self) -> Result<usize> {
